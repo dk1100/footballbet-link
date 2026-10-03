@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FootballBet · סיכום</title>
+  <meta property="og:title" content="FootballBet · סיכום המחזור">
+  <meta property="og:description" content="כל המשחקים, הטבלה והפנינים — באפליקציה">
+  <meta property="og:image" content="https://dk1100.github.io/footballbet-link/og.jpg">
+  <meta property="og:type" content="website">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>FootballBet</h1>
+    <p id="msg">סיכום המחזור מחכה באפליקציה</p>
+    <a id="app" class="btn" hidden>פתיחה באפליקציה</a>
+    <a id="go" class="btn go" hidden>פתיחה ב-Expo Go</a>
+    <small id="hint" hidden>האפליקציה צריכה להיות מותקנת.</small>
+  </main>
+  <script src="link.js"></script>
+  <script>
+    var t = FootballBetLink.recapTargets(location.search)
+    if (!t) {
+      document.getElementById('msg').textContent = 'הקישור הזה לא תקין.'
+    } else {
+      var app = document.getElementById('app'); app.href = t.app; app.hidden = false
+      if (t.go) { var go = document.getElementById('go'); go.href = t.go; go.hidden = false }
+      document.getElementById('hint').hidden = false
+    }
+  </script>
+</body>
+</html>

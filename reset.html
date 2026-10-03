@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FootballBet · איפוס סיסמה</title>
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>איפוס סיסמה</h1>
+    <p id="msg">לחצו כדי לבחור סיסמה חדשה באפליקציה</p>
+    <a id="app" class="btn" hidden>פתיחה באפליקציה</a>
+    <a id="go" class="btn go" hidden>פתיחה ב-Expo Go</a>
+  </main>
+  <script src="link.js"></script>
+  <script>
+    var t = FootballBetLink.resetTargets(location.search, location.hash)
+    // The tokens stay only in the buttons, not in the address bar or history.
+    history.replaceState(null, '', location.pathname + location.search)
+    if (t.error) {
+      document.getElementById('msg').textContent = 'הקישור פג תוקף או לא תקין. בקשו איפוס חדש מהאפליקציה.'
+    } else {
+      var app = document.getElementById('app'); app.href = t.app; app.hidden = false
+      if (t.go) { var go = document.getElementById('go'); go.href = t.go; go.hidden = false }
+    }
+  </script>
+</body>
+</html>
