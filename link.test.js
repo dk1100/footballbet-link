@@ -36,6 +36,19 @@ test('Expo Go addresses are accepted only for THIS project and the expected scre
   assert.equal(expoGoTarget(GO_RECAP, 'auth/reset-password'), null)             // wrong screen
 })
 
+test('an update-group address of this project is accepted, with a uuid only', () => {
+  const GID = '0b9050b5-fc2b-4985-9d06-06a36b0fca3b'
+  assert.equal(expoGoTarget(`${PROJECT}/group/${GID}/--/auth/reset-password?channel-name=production`, 'auth/reset-password'), `${PROJECT}/group/${GID}/--/auth/reset-password?channel-name=production`)
+  assert.equal(expoGoTarget(`${PROJECT}/group/${GID}`, ''), `${PROJECT}/group/${GID}`)
+  for (const bad of [
+    `${PROJECT}/group/../00000000-0000-0000-0000-000000000000/--/auth/reset-password`,
+    `${PROJECT}/group/${GID}/../x/--/auth/reset-password`,
+    `${PROJECT}/group/not-a-uuid/--/auth/reset-password`,
+    `${PROJECT}/group/${GID}/--/phase-summary`,
+  ]) assert.equal(expoGoTarget(bad, 'auth/reset-password'), null, bad)
+  assert.equal(new URL(`${PROJECT}/group/${GID}/--/auth/reset-password`).pathname.split('/')[1], PROJECT.split('/').pop())
+})
+
 test('every accepted address resolves to THIS project, the way a URL parser reads it', () => {
   const id = PROJECT.split('/').pop()
   for (const [go, path] of [[GO_RECAP, 'phase-summary'], [GO_RESET, 'auth/reset-password'], [`${PROJECT}?channel-name=production`, '']]) {

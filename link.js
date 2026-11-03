@@ -14,7 +14,7 @@
    * ?go= if it opens this project's Expo Go update at `path`, else null.
    *
    * The path part (everything before the first "?") must be EXACTLY the project, or
-   * the project + "/--/" + path. A prefix check is not enough: "<project>/../<other>/--/<path>"
+   * the project + "/--/" + path, either optionally after "/group/<uuid>". A prefix check is not enough: "<project>/../<other>/--/<path>"
    * (and its %2e%2e forms) starts with the project, passes a substring search for
    * "/--/<path>", and resolves to ANOTHER project, which would then receive the
    * reset email's session. Comparing the whole path leaves no room for a dot
@@ -26,8 +26,16 @@
     if (/[#\s<>"'\\]/.test(go)) return null
     var q = go.indexOf('?')
     var pathPart = q < 0 ? go : go.slice(0, q)
-    var expected = path ? PROJECT + '/--/' + path : PROJECT
-    return pathPart === expected ? go : null
+    if (pathPart.slice(0, PROJECT.length) !== PROJECT) return null
+    var rest = pathPart.slice(PROJECT.length)
+    // Expo Go also opens an update group as <project>/group/<uuid>; the id is a uuid,
+    // so it cannot carry a dot segment.
+    var group = /^\/group\/([^/]+)/.exec(rest)
+    if (group) {
+      if (!UUID.test(group[1])) return null
+      rest = rest.slice(group[0].length)
+    }
+    return rest === (path ? '/--/' + path : '') ? go : null
   }
 
   /** The two buttons for a shared recap (?r=<uuid>), or null for a bad link. */
