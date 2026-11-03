@@ -10,14 +10,24 @@
   var PROJECT = 'exp://u.expo.dev/6aaf42f5-e474-4592-a7f1-99edc374be09'
   var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-  /** ?go= if it opens this project's Expo Go update at `path`, else null. */
+  /**
+   * ?go= if it opens this project's Expo Go update at `path`, else null.
+   *
+   * The path part (everything before the first "?") must be EXACTLY the project, or
+   * the project + "/--/" + path. A prefix check is not enough: "<project>/../<other>/--/<path>"
+   * (and its %2e%2e forms) starts with the project, passes a substring search for
+   * "/--/<path>", and resolves to ANOTHER project, which would then receive the
+   * reset email's session. Comparing the whole path leaves no room for a dot
+   * segment, an encoded one or a backslash. Nothing may sit in the query that
+   * could break out of an attribute either.
+   */
   function expoGoTarget(go, path) {
     if (typeof go !== 'string') return null
-    var next = go.charAt(PROJECT.length)
-    if (go.slice(0, PROJECT.length) !== PROJECT || (next !== '/' && next !== '?')) return null
-    if (/[#\s<>"']/.test(go)) return null
-    if (path && go.indexOf('/--/' + path) < 0) return null
-    return go
+    if (/[#\s<>"'\\]/.test(go)) return null
+    var q = go.indexOf('?')
+    var pathPart = q < 0 ? go : go.slice(0, q)
+    var expected = path ? PROJECT + '/--/' + path : PROJECT
+    return pathPart === expected ? go : null
   }
 
   /** The two buttons for a shared recap (?r=<uuid>), or null for a bad link. */

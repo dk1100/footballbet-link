@@ -36,6 +36,33 @@ test('Expo Go addresses are accepted only for THIS project and the expected scre
   assert.equal(expoGoTarget(GO_RECAP, 'auth/reset-password'), null)             // wrong screen
 })
 
+test('every accepted address resolves to THIS project, the way a URL parser reads it', () => {
+  const id = PROJECT.split('/').pop()
+  for (const [go, path] of [[GO_RECAP, 'phase-summary'], [GO_RESET, 'auth/reset-password'], [`${PROJECT}?channel-name=production`, '']]) {
+    assert.equal(expoGoTarget(go, path), go)
+    assert.equal(new URL(go).pathname.split('/')[1], id, go)
+  }
+})
+
+test('a dot segment or an encoded one cannot steer the address to another project', () => {
+  for (const [go, path] of [
+    [`${PROJECT}/../00000000-0000-0000-0000-000000000000/--/auth/reset-password`, 'auth/reset-password'],
+    [`${PROJECT}/%2e%2e/00000000-0000-0000-0000-000000000000/--/auth/reset-password`, 'auth/reset-password'],
+    [`${PROJECT}/%2E%2E/00000000-0000-0000-0000-000000000000/--/auth/reset-password`, 'auth/reset-password'],
+    [`${PROJECT}/./--/auth/reset-password`, 'auth/reset-password'],
+    [`${PROJECT}/--/auth/reset-password/../../x`, 'auth/reset-password'],
+    [`${PROJECT}/--/auth/reset-password/`, 'auth/reset-password'],
+    [`${PROJECT}\\..\\00000000-0000-0000-0000-000000000000/--/auth/reset-password`, 'auth/reset-password'],
+    [`${PROJECT}?x=1/--/auth/reset-password`, 'auth/reset-password'],   // the path only in the query
+    [`${PROJECT}/--/phase-summary/../../auth/reset-password`, 'auth/reset-password'],
+    [`${PROJECT}/`, ''],
+    [`${PROJECT}/--/anything`, ''],
+  ]) {
+    assert.equal(expoGoTarget(go, path), null, go)
+    assert.equal(resetTargets(q({ go }), TOKENS).go, null, go)
+  }
+})
+
 test('a reset hands the session on to the app and to Expo Go, unchanged', () => {
   assert.deepEqual(resetTargets(q({ go: GO_RESET }), TOKENS), {
     app: `footballbet://auth/reset-password${TOKENS}`,
