@@ -49,14 +49,21 @@
   /**
    * The two buttons for a password reset: Supabase's verify step lands here
    * with the session in the fragment (#access_token=…&type=recovery), or an
-   * error (#error=…). The fragment is handed on unchanged.
+   * error (#error=…). The app gets the fragment unchanged.
+   *
+   * Expo Go gets the session in the QUERY instead. When Expo Go is already
+   * running, the link reaches the app only as a url event; expo-router routes it
+   * with `new URL()`, which drops the fragment, and the reset screen mounts after
+   * the event, so no link reader sees it either (production, 2026-11-03:
+   * "url=no initial=no"). A query survives that path as route params.
    */
   function resetTargets(search, hash) {
     var h = new URLSearchParams((hash || '').replace(/^#/, ''))
     if (h.get('error') || !h.get('access_token') || h.get('type') !== 'recovery') return { error: true }
     var frag = (hash.charAt(0) === '#' ? hash : '#' + hash)
     var go = expoGoTarget(new URLSearchParams(search).get('go'), 'auth/reset-password')
-    return { app: 'footballbet://auth/reset-password' + frag, go: go ? go + frag : null }
+    var session = new URLSearchParams({ access_token: h.get('access_token'), refresh_token: h.get('refresh_token') || '', type: 'recovery' })
+    return { app: 'footballbet://auth/reset-password' + frag, go: go ? go + (go.indexOf('?') < 0 ? '?' : '&') + session : null }
   }
 
   var api = { PROJECT: PROJECT, expoGoTarget: expoGoTarget, recapTargets: recapTargets, resetTargets: resetTargets }

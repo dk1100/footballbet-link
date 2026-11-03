@@ -76,12 +76,24 @@ test('a dot segment or an encoded one cannot steer the address to another projec
   }
 })
 
-test('a reset hands the session on to the app and to Expo Go, unchanged', () => {
+test('a reset hands the session to the app in the fragment and to Expo Go in the query', () => {
   assert.deepEqual(resetTargets(q({ go: GO_RESET }), TOKENS), {
     app: `footballbet://auth/reset-password${TOKENS}`,
-    go: GO_RESET + TOKENS,
+    go: `${GO_RESET}&access_token=eyJ.a.b&refresh_token=r3f&type=recovery`,
   })
   assert.equal(resetTargets('', TOKENS).go, null)
+})
+
+// The address the app really sends (production auth logs, 2026-11-03): an update group, no query.
+// Expo Go, already running, routes it with new URL(), which drops a fragment, so the session must
+// be in the query and nothing may follow it.
+test('Expo Go gets the session in the query of the real update-group address', () => {
+  const real = `${PROJECT}/group/ecff5385-0224-4d5a-8531-2ffc839e14cd/--/auth/reset-password`
+  const { go } = resetTargets(q({ go: real }), TOKENS)
+  assert.equal(go, `${real}?access_token=eyJ.a.b&refresh_token=r3f&type=recovery`)
+  const u = new URL('a://' + go.split('/--/')[1])
+  assert.equal(u.hash, '')
+  assert.deepEqual(Object.fromEntries(u.searchParams), { access_token: 'eyJ.a.b', refresh_token: 'r3f', type: 'recovery' })
 })
 
 test('a reset never forwards the session to another project or screen', () => {
